@@ -11,6 +11,8 @@ import {
   import AntDesign from "@expo/vector-icons/AntDesign";
   import Feather from "@expo/vector-icons/Feather";
   import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+  import * as FileSystem from 'expo-file-system';
+
 
 export function CameraScreen() {
     const [permission, requestPermission] = useCameraPermissions();
@@ -34,11 +36,29 @@ export function CameraScreen() {
       </View>
     );
   }
+  
+    const FOLDER_NAME = 'MyAppImages';
+    const folderUri = FileSystem.documentDirectory + FOLDER_NAME + '/';
+
+    async function createFolderIfNotExists() {
+    const folderInfo = await FileSystem.getInfoAsync(folderUri);
+    if (!folderInfo.exists) {
+        await FileSystem.makeDirectoryAsync(folderUri, { intermediates: true });
+        }
+    }
 
   const takePicture = async () => {
     const photo = await ref.current?.takePictureAsync();
-    setUri(photo?.uri);
+    saveImageFromUrl(photo?.uri);
   };
+  
+  async function saveImageFromUrl(url, filename = `img_${Date.now()}_${Math.floor(Math.random() * 100000)}.jpg`) {
+    createFolderIfNotExists();
+    const path = folderUri + filename;
+    const result = await FileSystem.downloadAsync(url, path);
+    console.log('Saved to:', result.uri);
+    return result.uri;  // file:// URI
+  }
   
 
   const recordVideo = async () => {
