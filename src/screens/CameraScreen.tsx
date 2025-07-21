@@ -12,6 +12,8 @@ import {
   import Feather from "@expo/vector-icons/Feather";
   import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
   import * as FileSystem from 'expo-file-system';
+  import { generateAIImageFromPhoto } from '../services/aiService';
+
 
 
 export function CameraScreen() {
@@ -21,6 +23,7 @@ export function CameraScreen() {
   const [mode, setMode] = useState<CameraMode>("picture");
   const [facing, setFacing] = useState<CameraType>("back");
   const [recording, setRecording] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   if (!permission) {
     return null;
@@ -50,6 +53,7 @@ export function CameraScreen() {
   const takePicture = async () => {
     const photo = await ref.current?.takePictureAsync();
     saveImageFromUrl(photo?.uri);
+    handlePhotoTaken(photo?.uri);
   };
   
   async function saveImageFromUrl(url, filename = `img_${Date.now()}_${Math.floor(Math.random() * 100000)}.jpg`) {
@@ -60,6 +64,16 @@ export function CameraScreen() {
     return result.uri;  // file:// URI
   }
   
+  async function handlePhotoTaken(photoUri: string) {
+    setLoading(true);
+    try {
+      const processedUri = await generateAIImageFromPhoto(photoUri, 'make it look like a painting');
+    } catch (e) {
+      console.error('AI processing failed:', e);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const recordVideo = async () => {
     if (recording) {
